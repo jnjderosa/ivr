@@ -39,7 +39,7 @@ http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/cu
             <otherwise>
                 <anypoint-mq:nack config-ref="Anypoint_MQ_Configuration1" doc:name="Nack Operation"/>
                 <logger level="INFO" doc:name="Log Failure"/>
-                <jms:outbound-endpoint connector-ref="JMS" doc:name="Pub Error and Message to iPET " queue="dfasf"/>
+                <jms:outbound-endpoint connector-ref="JMS" doc:name="Pub Error and Message to iPET" queue="dfasf"/>
             </otherwise>
         </choice>
     </flow>
