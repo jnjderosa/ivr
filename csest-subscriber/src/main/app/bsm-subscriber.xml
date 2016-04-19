@@ -34,7 +34,7 @@ http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/cu
         <choice doc:name="Success?">
             <when expression="blah">
                 <anypoint-mq:ack config-ref="Anypoint_MQ_Configuration1" doc:name="Ack Operation"/>
-                <jms:outbound-endpoint connector-ref="JMS" doc:name="Pub Message to iPET" queue="1q212"/>
+                <jms:outbound-endpoint connector-ref="JMS" doc:name="Pub Message to iPET " queue="1q212"/>
             </when>
             <otherwise>
                 <anypoint-mq:nack config-ref="Anypoint_MQ_Configuration1" doc:name="Nack Operation"/>
