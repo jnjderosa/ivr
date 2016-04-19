@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd">
+    <jms:connector name="JMS2" validateConnections="true" doc:name="JMS"/>
+    <anypoint-mq:config name="Anypoint_MQ_Configuration2" doc:name="Anypoint MQ Configuration">
+        <anypoint-mq:provider url="https://mq-us-east-1.anypoint.mulesoft.com/api/v1" clientId="1" clientSecret="1"/>
+    </anypoint-mq:config>
+    <flow name="canonical-transform-flow">
+        <anypoint-mq:subscriber config-ref="Anypoint_MQ_Configuration1" destination="abcd" doc:name="Anypoint MQ - Subject"/>
+        <jms:outbound-endpoint queue="abc" connector-ref="JMS" doc:name="Pub Message - iPET"/>
+        <logger level="INFO" doc:name="Log non-sensitive data"/>
+        <choice doc:name="Choice">
+            <when expression="">
+                <flow-ref name="site-sub-flow" doc:name="site-sub-flow"/>
+            </when>
+            <when expression="">
+                <flow-ref name="materials-sub-flow" doc:name="materials-sub-flow"/>
+            </when>
+            <when expression="">
+                <flow-ref name="study-sub-flow" doc:name="study-sub-flow"/>
+            </when>
+            <otherwise>
+                <flow-ref name="subject-sub-flow" doc:name="subject-sub-flow"/>
+            </otherwise>
+        </choice>
+        <choice doc:name="Success?">
+            <when expression="blah">
+                <anypoint-mq:ack config-ref="Anypoint_MQ_Configuration1" doc:name="Ack Operation"/>
+                <jms:outbound-endpoint connector-ref="JMS" doc:name="Pub Message to iPET" queue="1q212"/>
+            </when>
+            <otherwise>
+                <anypoint-mq:nack config-ref="Anypoint_MQ_Configuration1" doc:name="Nack Operation"/>
+                <logger level="INFO" doc:name="Log Failure"/>
+                <jms:outbound-endpoint connector-ref="JMS" doc:name="Pub Error and Message to iPET " queue="dfasf"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <sub-flow name="subject-sub-flow">
+        <dw:transform-message doc:name="Transform IVR to Subject CDM">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <anypoint-mq:publish config-ref="Anypoint_MQ_Configuration1" doc:name="Publish to Subject Exchange" destination="h"/>
+    </sub-flow>
+    <sub-flow name="site-sub-flow">
+        <dw:transform-message doc:name="Transform IVR to Site CDM">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <anypoint-mq:publish config-ref="Anypoint_MQ_Configuration1" doc:name="Publish to Site Exchange" destination="y"/>
+    </sub-flow>
+    <sub-flow name="study-sub-flow">
+        <dw:transform-message doc:name="Transform IVR to Study CDM">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <anypoint-mq:publish config-ref="Anypoint_MQ_Configuration1" doc:name="Publish to Study Exchange" destination="x"/>
+    </sub-flow>
+    <sub-flow name="materials-sub-flow">
+        <dw:transform-message doc:name="Transform IVR to Materials CDM">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <anypoint-mq:publish config-ref="Anypoint_MQ_Configuration1" doc:name="Publish to Materials Exchange" destination="x"/>
+    </sub-flow>
+</mule>

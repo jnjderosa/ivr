@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd">
+    <anypoint-mq:config name="Anypoint_MQ_Configuration" doc:name="Anypoint MQ Configuration">
+        <anypoint-mq:provider url="https://mq-us-east-1.anypoint.mulesoft.com/api/v1" clientId="1" clientSecret="1"/>
+    </anypoint-mq:config>
+    <jms:connector name="JMS" validateConnections="true" doc:name="JMS"/>
+    <anypoint-mq:config name="Anypoint_MQ_Configuration1" doc:name="Anypoint MQ Configuration">
+        <anypoint-mq:provider url="https://mq-us-east-1.anypoint.mulesoft.com/api/v1" clientId="1" clientSecret="1"/>
+    </anypoint-mq:config>
+    <ws:consumer-config name="Web_Service_Consumer" wsdlLocation="1" service="2" port="3" serviceAddress="4" doc:name="Web Service Consumer"/>
+    <flow name="rave-subscriber-flow">
+        <anypoint-mq:subscriber config-ref="Anypoint_MQ_Configuration1" destination="abcd" doc:name="Anypoint MQ - Order Tracking"/>
+        <jms:outbound-endpoint queue="abc" connector-ref="JMS" doc:name="Pub Message - iPET"/>
+        <logger level="INFO" doc:name="Log non-sensitive data"/>
+        <dw:transform-message doc:name="Transform CDM to RAVE">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <ws:consumer config-ref="Web_Service_Consumer" operation="test" doc:name="Invoke RAVE SOAP Service"/>
+        <choice doc:name="Success?">
+            <when expression="blah">
+                <anypoint-mq:no-operation-selected config-ref="Anypoint_MQ_Configuration1" doc:name="Ack Operation"/>
+                <jms:outbound-endpoint queue="1q212" connector-ref="JMS" doc:name="Pub Message to iPET"/>
+            </when>
+            <otherwise>
+                <anypoint-mq:nack config-ref="Anypoint_MQ_Configuration1" doc:name="Nack Operation"/>
+                <logger level="INFO" doc:name="Log Failure"/>
+                <jms:outbound-endpoint queue="dfasf" connector-ref="JMS" doc:name="Pub Error and Message to iPET "/>
+            </otherwise>
+        </choice>
+    </flow>
+</mule>
